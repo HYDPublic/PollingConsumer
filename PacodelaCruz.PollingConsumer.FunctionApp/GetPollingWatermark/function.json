@@ -1,0 +1,19 @@
+﻿{
+  "disabled": false,
+  "scriptFile": "..\\bin\\PacodelaCruz.PollingConsumer.FunctionApp.dll",
+  "entryPoint": "PacodelaCruz.PollingConsumer.FunctionApp.GetPollingWatermark.Run",
+  "bindings": [
+    {
+      "name": "req",
+      "type": "httpTrigger",
+      "direction": "in",
+      "methods": [ "get" ],
+      "authLevel": "function"
+    },
+    {
+      "name": "res",
+      "type": "http",
+      "direction": "out"
+    }
+  ]
+}

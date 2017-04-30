@@ -1,0 +1,19 @@
+﻿{
+  "id": "9ac0d31ac1234567890d685e57164f08",
+  "functionTimeout": "00:05:00",
+  "http": {
+    "routePrefix": "api"
+  },
+  "watchDirectories": [ "Shared" ],
+  "tracing": {
+    "consoleLevel": "info",
+    "fileLoggingMode": "debugOnly"
+  },
+  "singleton": {
+    "lockPeriod": "00:00:15",
+    "listenerLockPeriod": "00:01:00",
+    "listenerLockRecoveryPollingInterval": "00:01:00",
+    "lockAcquisitionTimeout": "00:01:00",
+    "lockAcquisitionPollingInterval": "00:00:03"
+  }
+}
