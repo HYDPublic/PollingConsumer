@@ -1,0 +1,126 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {},
+  "variables": {},
+  "resources": [
+    {
+      "properties": {
+        "state": "Disabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "GetPollingWatermark": {
+              "type": "Function",
+              "inputs": {
+                "method": "GET",
+                "queries": {
+                  "Entity": "EmployeeNewHire",
+                  "SourceSystem": "HRSystem"
+                },
+                "function": {
+                  "id": "/subscriptions/subscription-id/resourceGroups/pacopollingconsumer-rgrp/providers/Microsoft.Web/sites/pacopollingconsumer-func/functions/GetPollingWatermark"
+                }
+              },
+              "runAfter": {}
+            },
+            "Get_Updated_Records_from_HR_System_Atom_Feed": {
+              "type": "Http",
+              "inputs": {
+                "method": "GET",
+                "uri": "https://hrsystem/atom/employee/newhire?updated-min=@{body('Parse_Polling_Watermark_')?['Watermark']}&updated-max=@{body('Parse_Polling_Watermark_')?['NextWatermark']}",
+                "headers": {
+                  "Authorization": "Basic abcdef1234567890"
+                }
+              },
+              "runAfter": {
+                "Parse_Polling_Watermark_": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Parse_Polling_Watermark_": {
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@body('GetPollingWatermark')",
+                "schema": {
+                  "properties": {
+                    "Entity": {
+                      "type": "string"
+                    },
+                    "NextWatermark": {
+                      "type": "string"
+                    },
+                    "SourceSystem": {
+                      "type": "string"
+                    },
+                    "Watermark": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "runAfter": {
+                "GetPollingWatermark": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "UpdatePollingWatermark": {
+              "type": "Function",
+              "inputs": {
+                "body": "@body('GetPollingWatermark')",
+                "method": "PATCH",
+                "function": {
+                  "id": "/subscriptions/subscription-id/resourceGroups/pacopollingconsumer-rgrp/providers/Microsoft.Web/sites/pacopollingconsumer-func/functions/UpdatePollingWatermark"
+                }
+              },
+              "runAfter": {
+                "pacopollingconsumer-logic-debatchandprocess": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "pacopollingconsumer-logic-debatchandprocess": {
+              "type": "Workflow",
+              "inputs": {
+                "host": {
+                  "triggerName": "manual",
+                  "workflow": {
+                    "id": "/subscriptions/subscription-id/resourceGroups/pacopollingconsumer-rgrp/providers/Microsoft.Logic/workflows/pacopollingconsumer-logic-debatchandprocess"
+                  }
+                },
+                "body": "@xml(body('Get_Updated_Records_from_HR_System_Atom_Feed'))"
+              },
+              "runAfter": {
+                "Get_Updated_Records_from_HR_System_Atom_Feed": [
+                  "Succeeded"
+                ]
+              },
+              "operationOptions": "DisableAsyncPattern"
+            }
+          },
+          "parameters": {},
+          "triggers": {
+            "Poll_every_10_minutes": {
+              "type": "Recurrence",
+              "recurrence": {
+                "frequency": "Minute",
+                "interval": 10
+              }
+            }
+          },
+          "contentVersion": "1.0.0.0",
+          "outputs": {}
+        },
+        "parameters": {}
+      },
+      "name": "pacopollingconsumer-logic-getupdatedrecords",
+      "type": "Microsoft.Logic/workflows",
+      "location": "australiasoutheast",
+      "apiVersion": "2016-06-01"
+    }
+  ],
+  "outputs": {}
+}
